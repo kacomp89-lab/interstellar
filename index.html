@@ -1,331 +1,935 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>memory.os — AI Screenshot Memory & Search Engine</title>
-  <style>
-    :root {
-      --bg-gradient: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                     radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 40%),
-                     radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, #030712 100%);
-      --glass-bg: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(255, 255, 255, 0.12);
-      --glass-border-hover: rgba(255, 255, 255, 0.3);
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --accent-glow: #6366f1;
-      --accent-purple: #a855f7;
-      --radius-lg: 24px;
-      --radius-md: 16px;
-      --radius-sm: 12px;
-      --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    body {
-      background-color: #030712;
-      background-image: var(--bg-gradient);
-      color: var(--text-primary);
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
-    }
-
-    .liquid-orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      z-index: -1;
-      animation: floatOrb 15s ease-in-out infinite alternate;
-      pointer-events: none;
-    }
-
-    .orb-1 { width: 450px; height: 450px; background: rgba(99, 102, 241, 0.25); top: -100px; left: -100px; }
-    .orb-2 { width: 500px; height: 500px; background: rgba(168, 85, 247, 0.2); bottom: -150px; right: -100px; animation-delay: -5s; }
-
-    @keyframes floatOrb {
-      0% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(40px, 60px) scale(1.1); }
-      100% { transform: translate(-30px, 40px) scale(0.95); }
-    }
-
-    .navbar {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90%;
-      max-width: 1200px;
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-lg);
-      padding: 14px 28px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 1000;
-      box-shadow: var(--glass-shadow);
-    }
-
-    .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: var(--text-primary);
-      font-weight: 700;
-      font-size: 1.25rem;
-    }
-
-    .nav-brand span {
-      background: linear-gradient(135deg, #818cf8, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      list-style: none;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      color: var(--text-secondary);
-      font-size: 0.95rem;
-      font-weight: 500;
-      padding: 8px 16px;
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
-    }
-
-    .nav-links a:hover, .nav-links a.active {
-      color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--glass-border-hover);
-    }
-
-    .nav-actions { display: flex; align-items: center; gap: 12px; }
-
-    .btn-glass {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      color: var(--text-primary);
-      padding: 10px 20px;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
-      font-size: 0.95rem;
-      cursor: pointer;
-      text-decoration: none;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-glass:hover {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: var(--glass-border-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3);
-    }
-
-    .btn-primary-glass {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(168, 85, 247, 0.6));
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #fff;
-      padding: 10px 22px;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
-      font-size: 0.95rem;
-      cursor: pointer;
-      text-decoration: none;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-primary-glass:hover {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.8));
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px -5px rgba(168, 85, 247, 0.5);
-    }
-
-    .main-container {
-      max-width: 1200px;
-      margin: 140px auto 80px;
-      padding: 0 20px;
-    }
-
-    .glass-card {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-lg);
-      padding: 40px;
-      box-shadow: var(--glass-shadow);
-      transition: var(--transition);
-    }
-
-    .glass-card:hover {
-      border-color: var(--glass-border-hover);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    }
-
-    .form-input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-sm);
-      padding: 14px 18px;
-      color: var(--text-primary);
-      font-size: 1rem;
-      outline: none;
-      transition: var(--transition);
-    }
-
-    .form-input:focus {
-      border-color: var(--accent-glow);
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
-    }
-
-    .footer {
-      text-align: center;
-      padding: 40px 0;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      border-top: 1px solid var(--glass-border);
-      margin-top: 80px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrpix AI - General Assistant</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mono: {
+                            50: '#fafafa',
+                            100: '#f5f5f5',
+                            200: '#e5e5e5',
+                            300: '#d4d4d4',
+                            400: '#a3a3a3',
+                            500: '#737373',
+                            600: '#525252',
+                            700: '#404040',
+                            800: '#262626',
+                            900: '#171717',
+                            950: '#0a0a0a',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'slide-in': 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'fade-in': 'fadeIn 0.25s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-6px)' },
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateX(-100%)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.96) translateY(4px)' },
+                            '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for Code blocks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #171717;
+            overflow-x: hidden;
+        }
+        code, pre {
+            font-family: 'Fira Code', monospace;
+        }
+        .liquid-box {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid #e5e5e5;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .liquid-box:focus-within {
+            border-color: #171717;
+            box-shadow: 0 0 0 2px rgba(23, 23, 23, 0.15), 0 15px 35px -5px rgba(0, 0, 0, 0.12);
+        }
+        .sidebar-panel {
+            background-color: #0f0f0f;
+            color: #fafafa;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d4d4d4;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a3a3a3;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #404040;
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col relative selection:bg-neutral-900 selection:text-white">
 
-  <div class="liquid-orb orb-1"></div>
-  <div class="liquid-orb orb-2"></div>
+    <!-- Mobile Overlay -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden md:hidden transition-opacity"></div>
 
-  <nav class="navbar">
-    <a href="index.html" class="nav-brand">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" stroke-width="2.5"><defs><linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#c084fc"/></linearGradient></defs><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-      <span>memory.os</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="index.html" class="active">Home</a></li>
-      <li><a href="settings.html">Settings</a></li>
-    </ul>
-    <div class="nav-actions">
-      <a href="login.html" class="btn-glass">Sign In</a>
-      <a href="register.html" class="btn-primary-glass">Get Started</a>
+    <!-- Main App Container -->
+    <div class="flex h-screen w-full overflow-hidden relative">
+
+        <!-- Sidebar (Hidden by default on mobile, slides in via translateX) -->
+        <aside id="sidebar" class="sidebar-panel w-72 flex flex-col fixed md:relative inset-y-0 left-0 z-40 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out border-r border-neutral-800 shadow-2xl md:shadow-none sidebar-scroll">
+            
+            <!-- Sidebar Header -->
+            <div class="p-4 flex items-center justify-between border-b border-neutral-800">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateToView('chat')">
+                    <div class="w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center font-bold text-base shadow-md">
+                        S
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base tracking-tight text-white">Scrpix AI</h1>
+                        <span class="text-[10px] text-neutral-400 font-mono tracking-widest uppercase">Assistant v3.5</span>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden text-neutral-400 hover:text-white p-1.5 rounded-lg hover:bg-neutral-800 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- New Chat Button -->
+            <div class="p-4">
+                <button onclick="startNewChat(); if(window.innerWidth < 768) toggleSidebar();" class="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-white hover:bg-neutral-200 text-black font-medium text-sm transition-all shadow-md group">
+                    <i data-lucide="plus" class="w-4 h-4 group-hover:rotate-90 transition-transform duration-300"></i>
+                    <span>New Chat</span>
+                </button>
+            </div>
+
+            <!-- Chat History List -->
+            <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1 sidebar-scroll" id="chatHistoryList">
+                <div class="text-[11px] font-semibold text-neutral-500 px-3 py-1 uppercase tracking-wider">Recent Conversations</div>
+                <!-- Dynamic sessions injected here -->
+            </div>
+
+            <!-- Get Plus Banner / Button in Sidebar -->
+            <div class="p-3 mx-3 my-2 rounded-xl bg-gradient-to-r from-neutral-900 to-neutral-800 border border-neutral-700 flex items-center justify-between shadow-lg">
+                <div class="flex items-center space-x-2.5">
+                    <div class="p-2 rounded-lg bg-white text-black">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white">Scrpix Plus</div>
+                        <div class="text-[10px] text-neutral-400">Unlock advanced AI</div>
+                    </div>
+                </div>
+                <button onclick="navigateToView('plan'); if(window.innerWidth < 768) toggleSidebar();" class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition-all shadow">
+                    Upgrade
+                </button>
+            </div>
+
+            <!-- Sidebar Footer / User Profile -->
+            <div class="p-4 border-t border-neutral-800 flex items-center justify-between">
+                <div onclick="openAuthModal('signin')" class="flex items-center space-x-3 cursor-pointer group flex-1 overflow-hidden pr-2">
+                    <div class="relative">
+                        <div id="userAvatarContainer" class="w-9 h-9 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-white font-bold text-sm group-hover:border-neutral-500 transition-colors">
+                            SX
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-neutral-950"></div>
+                    </div>
+                    <div class="overflow-hidden">
+                        <div id="userNameDisplay" class="text-sm font-medium text-neutral-200 truncate group-hover:text-white transition-colors">Sign In / Up</div>
+                        <div class="text-[11px] text-neutral-400 truncate">Free Standard Tier</div>
+                    </div>
+                </div>
+                <button onclick="openAuthModal('signin')" class="text-neutral-400 hover:text-white p-2 rounded-xl hover:bg-neutral-800 transition-colors" title="Account">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Dynamic Content Container -->
+        <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-neutral-50">
+
+            <!-- Chat Header -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-neutral-200 h-16 px-4 md:px-6 flex items-center justify-between z-20 sticky top-0">
+                <div class="flex items-center space-x-3">
+                    <!-- Hamburger / 3-lines Button -->
+                    <button onclick="toggleSidebar()" class="text-neutral-700 hover:text-black p-2 rounded-xl hover:bg-neutral-100 transition-colors" title="Toggle Sidebar">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div class="flex items-center space-x-2 cursor-pointer" onclick="navigateToView('chat')">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 shadow-sm">
+                            <span class="w-1.5 h-1.5 rounded-full bg-neutral-900 animate-pulse mr-1.5"></span>
+                            Scrpix-3.5 Assistant
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="navigateToView('plan')" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-xs transition-all shadow-sm">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>Get Plus</span>
+                    </button>
+                    <button onclick="clearCurrentChat()" class="text-xs text-neutral-600 hover:text-black px-3 py-1.5 rounded-lg hover:bg-neutral-100 transition-colors flex items-center space-x-1.5">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Clear Chat</span>
+                    </button>
+                    <button onclick="openAuthModal('signin')" class="text-xs font-medium text-neutral-900 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 px-3.5 py-1.5 rounded-xl transition-colors">
+                        Sign In
+                    </button>
+                </div>
+            </header>
+
+            <!-- View Switcher Wrapper -->
+            <div id="viewContainer" class="flex-1 flex flex-col h-full overflow-hidden relative">
+
+                <!-- VIEW 1: CHAT VIEW -->
+                <div id="chatView" class="flex-1 flex flex-col h-full overflow-hidden relative">
+                    <!-- Messages Container -->
+                    <div id="chatMessages" class="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-6 scroll-smooth">
+                        <!-- Welcome Banner -->
+                        <div id="welcomeBanner" class="max-w-2xl mx-auto my-12 text-center space-y-6 animate-fade-in">
+                            <div class="relative inline-block">
+                                <div class="relative w-20 h-20 rounded-2xl bg-neutral-900 text-white flex items-center justify-center shadow-2xl mx-auto">
+                                    <i data-lucide="sparkles" class="w-10 h-10 animate-float"></i>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-neutral-900">How can <span class="text-neutral-500">Scrpix AI</span> help you today?</h2>
+                                <p class="text-neutral-500 text-sm max-w-md mx-auto">Your high-performance assistant for writing, coding, brainstorming, summarizing, and complex problem-solving.</p>
+                            </div>
+
+                            <!-- Suggestion Chips -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 text-left max-w-xl mx-auto">
+                                <button onclick="sendPresetPrompt('Write a professional email requesting a project deadline extension.')" class="p-3.5 rounded-xl bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-md transition-all text-xs text-neutral-700 flex items-center space-x-3 group">
+                                    <div class="p-2 rounded-lg bg-neutral-100 text-neutral-900 group-hover:scale-105 transition-transform">
+                                        <i data-lucide="mail" class="w-4 h-4"></i>
+                                    </div>
+                                    <span class="font-medium">Write a professional deadline email</span>
+                                </button>
+                                <button onclick="sendPresetPrompt('Brainstorm 5 unique startup ideas for sustainable urban living.')" class="p-3.5 rounded-xl bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-md transition-all text-xs text-neutral-700 flex items-center space-x-3 group">
+                                    <div class="p-2 rounded-lg bg-neutral-100 text-neutral-900 group-hover:scale-105 transition-transform">
+                                        <i data-lucide="lightbulb" class="w-4 h-4"></i>
+                                    </div>
+                                    <span class="font-medium">Brainstorm sustainable startup ideas</span>
+                                </button>
+                                <button onclick="sendPresetPrompt('Explain how asynchronous programming works in JavaScript with examples.')" class="p-3.5 rounded-xl bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-md transition-all text-xs text-neutral-700 flex items-center space-x-3 group">
+                                    <div class="p-2 rounded-lg bg-neutral-100 text-neutral-900 group-hover:scale-105 transition-transform">
+                                        <i data-lucide="code" class="w-4 h-4"></i>
+                                    </div>
+                                    <span class="font-medium">Explain JS async programming</span>
+                                </button>
+                                <button onclick="sendPresetPrompt('Summarize the core principles of effective time management.')" class="p-3.5 rounded-xl bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-md transition-all text-xs text-neutral-700 flex items-center space-x-3 group">
+                                    <div class="p-2 rounded-lg bg-neutral-100 text-neutral-900 group-hover:scale-105 transition-transform">
+                                        <i data-lucide="check-square" class="w-4 h-4"></i>
+                                    </div>
+                                    <span class="font-medium">Summarize time management principles</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Typing Indicator -->
+                    <div id="typingIndicator" class="hidden px-4 md:px-6 py-2">
+                        <div class="flex items-start space-x-3 max-w-4xl mx-auto">
+                            <div class="w-8 h-8 rounded-xl bg-neutral-900 text-white flex items-center justify-center shrink-0 shadow-md">
+                                <i data-lucide="bot" class="w-4 h-4"></i>
+                            </div>
+                            <div class="bg-white border border-neutral-200 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center space-x-2 shadow-sm">
+                                <div class="w-2 h-2 rounded-full bg-neutral-900 animate-bounce" style="animation-delay: 0s"></div>
+                                <div class="w-2 h-2 rounded-full bg-neutral-500 animate-bounce" style="animation-delay: 0.15s"></div>
+                                <div class="w-2 h-2 rounded-full bg-neutral-300 animate-bounce" style="animation-delay: 0.3s"></div>
+                                <span class="text-xs text-neutral-500 ml-2 font-mono">Scrpix is thinking...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Floating Input Area -->
+                    <div class="p-4 md:p-6 bg-gradient-to-t from-white via-white/90 to-transparent relative z-20">
+                        <div class="max-w-4xl mx-auto">
+                            <!-- Attached Files Previews -->
+                            <div id="attachmentPreviewContainer" class="flex flex-wrap gap-2 mb-2"></div>
+
+                            <!-- Liquid Input Box -->
+                            <div class="liquid-box rounded-2xl p-2 md:p-3 relative">
+                                <div class="flex items-end space-x-2">
+                                    <!-- Plus Attachment Button & Popup -->
+                                    <div class="relative">
+                                        <button type="button" onclick="toggleAttachMenu()" class="p-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 hover:text-black transition-all flex items-center justify-center border border-neutral-200" title="Attach file or image">
+                                            <i data-lucide="plus" class="w-5 h-5"></i>
+                                        </button>
+
+                                        <!-- Attach Popup Menu -->
+                                        <div id="attachMenu" class="hidden absolute bottom-12 left-0 w-48 bg-white rounded-xl p-1.5 shadow-2xl z-50 border border-neutral-200 animate-fade-in space-y-1">
+                                            <button onclick="triggerFileInput('image/*')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs text-neutral-700 hover:bg-neutral-100 hover:text-black transition-colors text-left font-medium">
+                                                <i data-lucide="image" class="w-4 h-4 text-neutral-500"></i>
+                                                <span>Upload Image</span>
+                                            </button>
+                                            <button onclick="triggerFileInput('.pdf,.txt,.doc,.docx,.csv')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs text-neutral-700 hover:bg-neutral-100 hover:text-black transition-colors text-left font-medium">
+                                                <i data-lucide="file-text" class="w-4 h-4 text-neutral-500"></i>
+                                                <span>Upload Document</span>
+                                            </button>
+                                        </div>
+                                        <input type="file" id="fileInput" class="hidden" onchange="handleFileSelected(event)">
+                                    </div>
+
+                                    <!-- Textarea Input -->
+                                    <div class="flex-1 min-h-[44px] max-h-36 flex items-center">
+                                        <textarea id="userInput" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleKeyDown(event)" placeholder="Ask Scrpix AI anything..." class="w-full bg-transparent text-neutral-900 placeholder-neutral-400 text-sm focus:outline-none resize-none py-2.5 px-1"></textarea>
+                                    </div>
+
+                                    <!-- Send Button -->
+                                    <button id="sendButton" onclick="sendMessage()" class="p-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white transition-all shadow-md shadow-neutral-900/10 flex items-center justify-center shrink-0" title="Send message">
+                                        <i data-lucide="arrow-up" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-2">
+                                <p class="text-[11px] text-neutral-400">Scrpix AI may occasionally generate inaccurate info. Please verify important responses.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: PLAN / PRICING VIEW (plan.html integration) -->
+                <div id="planView" class="hidden flex-1 overflow-y-auto px-4 md:px-12 py-12 max-w-5xl mx-auto w-full animate-fade-in">
+                    <div class="text-center space-y-4 mb-12">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-neutral-900 text-white">Scrpix Plus Subscription</span>
+                        <h2 class="text-4xl font-extrabold tracking-tight text-neutral-900">Choose the Plan That Fits Your Workflow</h2>
+                        <p class="text-neutral-500 max-w-lg mx-auto text-sm">Supercharge your productivity with priority access to advanced reasoning, larger document uploads, and lightning-fast speeds.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+                        <!-- Free Tier -->
+                        <div class="bg-white border border-neutral-200 rounded-3xl p-8 shadow-sm flex flex-col justify-between">
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-neutral-900">Free Standard</h3>
+                                    <p class="text-xs text-neutral-500">Essential AI assistant for daily tasks.</p>
+                                </div>
+                                <div class="text-3xl font-extrabold text-neutral-900">$0 <span class="text-xs font-normal text-neutral-500">/ forever</span></div>
+                                <ul class="space-y-3 text-xs text-neutral-700 pt-2 border-t border-neutral-100">
+                                    <li class="flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4 text-green-600"></i><span>Standard Gemini 3.5 Model</span></li>
+                                    <li class="flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4 text-green-600"></i><span>Basic image & document uploads</span></li>
+                                    <li class="flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4 text-green-600"></i><span>Chat history & search grounding</span></li>
+                                </ul>
+                            </div>
+                            <div class="pt-8">
+                                <button onclick="navigateToView('chat')" class="w-full py-3 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-semibold text-xs transition-colors">Current Plan</button>
+                            </div>
+                        </div>
+
+                        <!-- Plus Tier -->
+                        <div class="bg-neutral-900 text-white border border-neutral-800 rounded-3xl p-8 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                            <div class="absolute top-0 right-0 bg-white text-black text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">Popular</div>
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-white">Scrpix Plus</h3>
+                                    <p class="text-xs text-neutral-400">For power users, developers, and creators.</p>
+                                </div>
+                                <div class="text-3xl font-extrabold text-white">$19 <span class="text-xs font-normal text-neutral-400">/ month</span></div>
+                                <ul class="space-y-3 text-xs text-neutral-300 pt-2 border-t border-neutral-800">
+                                    <li class="flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4 text-white"></i><span>Priority access during high traffic</span></li>
+                                    <li class="flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4 text-white"></i><span>Extended context window & memory</span></li>
+                                    <li class="flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4 text-white"></i><span>Unlimited high-res image & doc attachments</span></li>
+                                    <li class="flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4 text-white"></i><span>Early preview of experimental features</span></li>
+                                </ul>
+                            </div>
+                            <div class="pt-8">
+                                <button onclick="openAuthModal('signup')" class="w-full py-3 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-semibold text-xs transition-all shadow-lg">Upgrade to Plus</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
     </div>
-  </nav>
 
-  <main class="main-container">
-    <section style="text-align: center; margin-bottom: 60px;">
-      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 50px; margin-bottom: 24px; font-size: 0.85rem; font-weight: 500; color: #a5b4fc;">
-        ✨ Apple Liquid Glass Experience v2.6 Active
-      </div>
-      <h1 style="font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 20px;">
-        Your Visual Memory, <br><span style="background: linear-gradient(135deg, #818cf8, #e879f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Supercharged by AI.</span>
-      </h1>
-      <p style="color: var(--text-secondary); font-size: clamp(1rem, 2vw, 1.25rem); max-width: 700px; margin: 0 auto 40px; line-height: 1.6;">
-        memory.os captures everything on your screen intelligently. Ask anything about your past screenshots, documents, or chats, and get instant evidence-backed answers.
-      </p>
+    <!-- SIGN IN / SIGN UP POPUP MODAL -->
+    <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl border border-neutral-200 space-y-6 relative">
+            <button onclick="closeAuthModal()" class="absolute top-6 right-6 text-neutral-400 hover:text-black p-1.5 rounded-lg hover:bg-neutral-100 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
 
-      <div class="glass-card" style="max-width: 800px; margin: 0 auto; padding: 24px;">
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <input type="text" id="aiSearchInput" class="form-input" placeholder="Ask anything... e.g. 'What was that flight price I saw yesterday?'" style="margin-bottom: 0;">
-          <button id="aiSearchBtn" class="btn-primary-glass" style="white-space: nowrap; padding: 14px 24px;">
-            AI Search
-          </button>
+            <!-- Modal Header / Tabs -->
+            <div class="flex space-x-2 border-b border-neutral-200 pb-4">
+                <button id="tabSignIn" onclick="switchAuthTab('signin')" class="text-base font-bold pb-2 border-b-2 border-neutral-900 text-neutral-900 transition-all">Sign In</button>
+                <button id="tabSignUp" onclick="switchAuthTab('signup')" class="text-base font-semibold pb-2 border-b-2 border-transparent text-neutral-400 hover:text-neutral-700 transition-all">Sign Up</button>
+            </div>
+
+            <!-- Form -->
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div id="nameFieldContainer" class="hidden space-y-1">
+                    <label class="block text-xs font-semibold text-neutral-700">Full Name</label>
+                    <input type="text" id="authName" placeholder="Alex Rivera" class="w-full bg-neutral-50 border border-neutral-300 rounded-xl px-4 py-3 text-sm text-neutral-900 focus:outline-none focus:border-neutral-900">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-neutral-700">Email Address</label>
+                    <input type="email" id="authEmail" required placeholder="alex@example.com" class="w-full bg-neutral-50 border border-neutral-300 rounded-xl px-4 py-3 text-sm text-neutral-900 focus:outline-none focus:border-neutral-900">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-neutral-700">Password</label>
+                    <input type="password" id="authPassword" required placeholder="••••••••" class="w-full bg-neutral-50 border border-neutral-300 rounded-xl px-4 py-3 text-sm text-neutral-900 focus:outline-none focus:border-neutral-900">
+                </div>
+
+                <button type="submit" id="authSubmitBtn" class="w-full py-3.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-sm transition-all shadow-lg">
+                    Sign In to Scrpix AI
+                </button>
+            </form>
+
+            <div class="text-center">
+                <p id="authSwitchText" class="text-xs text-neutral-500">Don't have an account? <span onclick="switchAuthTab('signup')" class="text-neutral-900 font-semibold cursor-pointer underline">Sign Up</span></p>
+            </div>
         </div>
-        
-        <div id="aiResultBox" style="margin-top: 20px; text-align: left; display: none; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 20px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #a5b4fc; font-weight: 600; font-size: 0.9rem;">
-            <span>🤖 memory.os AI Synthesizer</span>
-            <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-secondary);">Found in 3 screenshots • 99.4% Match</span>
-          </div>
-          <p id="aiAnswerText" style="font-size: 1rem; line-height: 1.6; margin-bottom: 16px; color: var(--text-primary);"></p>
-          <div style="border-top: 1px solid var(--glass-border); padding-top: 12px; display: flex; gap: 12px; align-items: center;">
-            <span style="font-size: 0.85rem; color: var(--text-secondary);">Evidence Source:</span>
-            <div style="background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--glass-border);">📸 Flight_Booking_Confirm.png (Yesterday, 4:15 PM)</div>
-          </div>
-        </div>
-      </div>
-    </section>
+    </div>
 
-    <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 60px;">
-      <div class="glass-card">
-        <div style="font-size: 2rem; margin-bottom: 16px;">🧠</div>
-        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;">Universal OCR & Context</h3>
-        <p style="color: var(--text-secondary); line-height: 1.5;">Continuously indexes text, code, images, and videos from your workflow securely.</p>
-      </div>
-      <div class="glass-card">
-        <div style="font-size: 2rem; margin-bottom: 16px;">🔍</div>
-        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;">Evidence-Based Answers</h3>
-        <p style="color: var(--text-secondary); line-height: 1.5;">Never guess. Every answer links directly to the exact timestamp and screenshot region.</p>
-      </div>
-      <div class="glass-card">
-        <div style="font-size: 2rem; margin-bottom: 16px;">🔒</div>
-        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;">Military-Grade Privacy</h3>
-        <p style="color: var(--text-secondary); line-height: 1.5;">Zero-knowledge encryption ensures your visual history remains strictly private.</p>
-      </div>
-    </section>
-  </main>
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-2 pointer-events-none"></div>
 
-  <footer class="footer">
-    <p>&copy; 2026 memory.os Inc. Designed with Apple Liquid Glass Aesthetics.</p>
-  </footer>
+    <!-- JavaScript Application Logic -->
+    <script>
+        // State
+        let chatSessions = [
+            { id: '1', title: 'General Conversation', messages: [] }
+        ];
+        let currentSessionId = '1';
+        let attachedFiles = [];
+        let authMode = 'signin'; // 'signin' or 'signup'
+        let currentUser = null;
+        let systemInstruction = 'You are Scrpix AI, a highly versatile, articulate, and helpful general-purpose AI assistant designed to help users with coding, writing, research, analysis, and everyday productivity.';
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const aiSearchBtn = document.getElementById('aiSearchBtn');
-      const aiSearchInput = document.getElementById('aiSearchInput');
-      const aiResultBox = document.getElementById('aiResultBox');
-      const aiAnswerText = document.getElementById('aiAnswerText');
-
-      if (aiSearchBtn && aiSearchInput && aiResultBox) {
-        const handleAISearch = () => {
-          const query = aiSearchInput.value.trim();
-          if (!query) {
-            aiSearchInput.style.borderColor = '#ef4444';
-            setTimeout(() => aiSearchInput.style.borderColor = 'var(--glass-border)', 1500);
-            return;
-          }
-
-          aiSearchBtn.textContent = 'Searching Vault...';
-          aiResultBox.style.display = 'none';
-
-          setTimeout(() => {
-            aiSearchBtn.textContent = 'AI Search';
-            aiResultBox.style.display = 'block';
-            aiAnswerText.innerHTML = `Based on your screenshot history for query <em>"${query}"</em>, you viewed a flight booking confirmation on <strong>Emirates Flight #EK202</strong> priced at <strong>$849.00</strong> departing from JFK to DXB on November 14, 2026.`;
-            aiResultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }, 800);
-        };
-
-        aiSearchBtn.addEventListener('click', handleAISearch);
-        aiSearchInput.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') handleAISearch();
+        // Initialize Icons
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderChatHistoryList();
+            loadFromLocalStorage();
         });
-      }
-    });
-  </script>
+
+        // Toggle Sidebar (Mobile slide)
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Navigation between Chat and Plan (plan.html integration)
+        function navigateToView(viewName) {
+            const chatView = document.getElementById('chatView');
+            const planView = document.getElementById('planView');
+
+            if (viewName === 'plan') {
+                chatView.classList.add('hidden');
+                planView.classList.remove('hidden');
+            } else {
+                planView.classList.add('hidden');
+                chatView.classList.remove('hidden');
+            }
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    toggleSidebar();
+                }
+            }
+        }
+
+        // Toggle Attachment Popup Menu
+        function toggleAttachMenu() {
+            const menu = document.getElementById('attachMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        window.addEventListener('click', (e) => {
+            const menu = document.getElementById('attachMenu');
+            const btn = e.target.closest('button');
+            if (menu && !menu.classList.contains('hidden') && (!btn || !btn.getAttribute('onclick')?.includes('toggleAttachMenu'))) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        function triggerFileInput(acceptType) {
+            const fileInput = document.getElementById('fileInput');
+            fileInput.accept = acceptType;
+            fileInput.click();
+            toggleAttachMenu();
+        }
+
+        // Handle File Selection & Base64
+        function handleFileSelected(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            const file = files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const base64String = e.target.result.split(',')[1];
+                attachedFiles.push({
+                    name: file.name,
+                    type: file.type,
+                    size: (file.size / 1024).toFixed(1) + ' KB',
+                    base64Data: base64String,
+                    previewUrl: file.type.startsWith('image/') ? e.target.result : null
+                });
+                renderAttachmentPreviews();
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function renderAttachmentPreviews() {
+            const container = document.getElementById('attachmentPreviewContainer');
+            container.innerHTML = '';
+            if (attachedFiles.length === 0) return;
+
+            attachedFiles.forEach((file, index) => {
+                const badge = document.createElement('div');
+                badge.className = 'flex items-center space-x-2 bg-neutral-100 border border-neutral-300 px-3 py-1.5 rounded-xl text-xs text-neutral-800 animate-fade-in shadow-sm';
+                
+                if (file.previewUrl) {
+                    badge.innerHTML = `
+                        <img src="${file.previewUrl}" class="w-6 h-6 rounded object-cover border border-neutral-200">
+                        <span class="truncate max-w-[120px] font-medium">${file.name}</span>
+                        <button onclick="removeAttachment(${index})" class="text-neutral-500 hover:text-black ml-1"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                    `;
+                } else {
+                    badge.innerHTML = `
+                        <i data-lucide="file-text" class="w-4 h-4 text-neutral-600"></i>
+                        <span class="truncate max-w-[120px] font-medium">${file.name}</span>
+                        <span class="text-[10px] text-neutral-400">(${file.size})</span>
+                        <button onclick="removeAttachment(${index})" class="text-neutral-500 hover:text-black ml-1"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                    `;
+                }
+                container.appendChild(badge);
+            });
+            lucide.createIcons();
+        }
+
+        function removeAttachment(index) {
+            attachedFiles.splice(index, 1);
+            renderAttachmentPreviews();
+        }
+
+        function autoResizeTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function sendPresetPrompt(text) {
+            navigateToView('chat');
+            document.getElementById('userInput').value = text;
+            sendMessage();
+        }
+
+        // Chat Sessions
+        function startNewChat() {
+            const newSession = {
+                id: Date.now().toString(),
+                title: 'New Chat',
+                messages: []
+            };
+            chatSessions.unshift(newSession);
+            currentSessionId = newSession.id;
+            renderChatHistoryList();
+            renderCurrentChatMessages();
+            navigateToView('chat');
+        }
+
+        function switchSession(sessionId) {
+            currentSessionId = sessionId;
+            renderChatHistoryList();
+            renderCurrentChatMessages();
+            navigateToView('chat');
+        }
+
+        function clearCurrentChat() {
+            const session = chatSessions.find(s => s.id === currentSessionId);
+            if (session) {
+                session.messages = [];
+                session.title = 'New Chat';
+                renderChatHistoryList();
+                renderCurrentChatMessages();
+                showToast('Chat cleared.', 'info');
+            }
+        }
+
+        function renderChatHistoryList() {
+            const listContainer = document.getElementById('chatHistoryList');
+            listContainer.innerHTML = '<div class="text-[11px] font-semibold text-neutral-500 px-3 py-1 uppercase tracking-wider">Recent Conversations</div>';
+
+            chatSessions.forEach(session => {
+                const isActive = session.id === currentSessionId;
+                const item = document.createElement('button');
+                item.onclick = () => switchSession(session.id);
+                item.className = `w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center justify-between group transition-colors ${isActive ? 'bg-neutral-800 text-white font-medium border border-neutral-700' : 'text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'}`;
+                
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2.5 overflow-hidden">
+                        <i data-lucide="message-square" class="w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-neutral-500'}"></i>
+                        <span class="truncate">${session.title}</span>
+                    </div>
+                    <span onclick="event.stopPropagation(); deleteSession('${session.id}')" class="opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-white p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></span>
+                `;
+                listContainer.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        function deleteSession(sessionId) {
+            chatSessions = chatSessions.filter(s => s.id !== sessionId);
+            if (chatSessions.length === 0) {
+                startNewChat();
+            } else if (currentSessionId === sessionId) {
+                currentSessionId = chatSessions[0].id;
+            }
+            renderChatHistoryList();
+            renderCurrentChatMessages();
+        }
+
+        function renderCurrentChatMessages() {
+            const container = document.getElementById('chatMessages');
+            const session = chatSessions.find(s => s.id === currentSessionId);
+            
+            if (!session || session.messages.length === 0) {
+                container.innerHTML = `
+                    <div id="welcomeBanner" class="max-w-2xl mx-auto my-12 text-center space-y-6 animate-fade-in">
+                        <div class="relative inline-block">
+                            <div class="relative w-20 h-20 rounded-2xl bg-neutral-900 text-white flex items-center justify-center shadow-2xl mx-auto">
+                                <i data-lucide="sparkles" class="w-10 h-10 animate-float"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-neutral-900">How can <span class="text-neutral-500">Scrpix AI</span> help you today?</h2>
+                            <p class="text-neutral-500 text-sm max-w-md mx-auto">Your high-performance assistant for writing, coding, brainstorming, summarizing, and complex problem-solving.</p>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 text-left max-w-xl mx-auto">
+                            <button onclick="sendPresetPrompt('Write a professional email requesting a project deadline extension.')" class="p-3.5 rounded-xl bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-md transition-all text-xs text-neutral-700 flex items-center space-x-3 group">
+                                <div class="p-2 rounded-lg bg-neutral-100 text-neutral-900 group-hover:scale-105 transition-transform"><i data-lucide="mail" class="w-4 h-4"></i></div>
+                                <span class="font-medium">Write a professional deadline email</span>
+                            </button>
+                            <button onclick="sendPresetPrompt('Brainstorm 5 unique startup ideas for sustainable urban living.')" class="p-3.5 rounded-xl bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-md transition-all text-xs text-neutral-700 flex items-center space-x-3 group">
+                                <div class="p-2 rounded-lg bg-neutral-100 text-neutral-900 group-hover:scale-105 transition-transform"><i data-lucide="lightbulb" class="w-4 h-4"></i></div>
+                                <span class="font-medium">Brainstorm sustainable startup ideas</span>
+                            </button>
+                            <button onclick="sendPresetPrompt('Explain how asynchronous programming works in JavaScript with examples.')" class="p-3.5 rounded-xl bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-md transition-all text-xs text-neutral-700 flex items-center space-x-3 group">
+                                <div class="p-2 rounded-lg bg-neutral-100 text-neutral-900 group-hover:scale-105 transition-transform"><i data-lucide="code" class="w-4 h-4"></i></div>
+                                <span class="font-medium">Explain JS async programming</span>
+                            </button>
+                            <button onclick="sendPresetPrompt('Summarize the core principles of effective time management.')" class="p-3.5 rounded-xl bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-md transition-all text-xs text-neutral-700 flex items-center space-x-3 group">
+                                <div class="p-2 rounded-lg bg-neutral-100 text-neutral-900 group-hover:scale-105 transition-transform"><i data-lucide="check-square" class="w-4 h-4"></i></div>
+                                <span class="font-medium">Summarize time management principles</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = '';
+            session.messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `flex items-start space-x-3 max-w-4xl mx-auto animate-fade-in ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`;
+
+                const avatar = document.createElement('div');
+                avatar.className = `w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md ${msg.role === 'user' ? 'bg-neutral-800' : 'bg-neutral-900'}`;
+                avatar.innerHTML = msg.role === 'user' ? '<span class="text-xs font-bold">U</span>' : '<i data-lucide="bot" class="w-4 h-4"></i>';
+
+                const contentBox = document.createElement('div');
+                contentBox.className = `px-4 py-3 rounded-2xl max-w-[85%] sm:max-w-[75%] text-sm shadow-sm ${msg.role === 'user' ? 'bg-neutral-900 text-white rounded-tr-sm' : 'bg-white border border-neutral-200 text-neutral-900 rounded-tl-sm'}`;
+
+                let attachmentsHtml = '';
+                if (msg.attachments && msg.attachments.length > 0) {
+                    attachmentsHtml = '<div class="flex flex-wrap gap-2 mb-2 pb-2 border-b border-neutral-200/20">';
+                    msg.attachments.forEach(att => {
+                        if (att.previewUrl) {
+                            attachmentsHtml += `<img src="${att.previewUrl}" class="w-24 h-24 rounded-lg object-cover border border-neutral-300">`;
+                        } else {
+                            attachmentsHtml += `<div class="flex items-center space-x-2 bg-neutral-100 px-3 py-1.5 rounded-lg text-xs text-neutral-800 border border-neutral-200"><i data-lucide="file-text" class="w-4 h-4 text-neutral-600"></i><span>${att.name}</span></div>`;
+                        }
+                    });
+                    attachmentsHtml += '</div>';
+                }
+
+                const renderedMarkdown = msg.role === 'assistant' ? marked.parse(msg.text) : escapeHtml(msg.text);
+
+                contentBox.innerHTML = attachmentsHtml + `<div class="prose max-w-none text-sm leading-relaxed">${renderedMarkdown}</div>`;
+
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(contentBox);
+                container.appendChild(messageDiv);
+            });
+
+            container.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+
+            lucide.createIcons();
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Send Message & Gemini API Call
+        async function sendMessage() {
+            const inputEl = document.getElementById('userInput');
+            const text = inputEl.value.trim();
+            if (!text && attachedFiles.length === 0) return;
+
+            const session = chatSessions.find(s => s.id === currentSessionId);
+            if (!session) return;
+
+            if (session.messages.length === 0) {
+                session.title = text.length > 28 ? text.substring(0, 28) + '...' : text;
+                renderChatHistoryList();
+            }
+
+            const userMsg = {
+                role: 'user',
+                text: text,
+                attachments: [...attachedFiles]
+            };
+            session.messages.push(userMsg);
+
+            inputEl.value = '';
+            inputEl.style.height = 'auto';
+            attachedFiles = [];
+            renderAttachmentPreviews();
+            renderCurrentChatMessages();
+
+            const typingEl = document.getElementById('typingIndicator');
+            typingEl.classList.remove('hidden');
+            const chatContainer = document.getElementById('chatMessages');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const responseText = await callGeminiAPI(session.messages);
+                typingEl.classList.add('hidden');
+                session.messages.push({
+                    role: 'assistant',
+                    text: responseText,
+                    attachments: []
+                });
+                renderCurrentChatMessages();
+                saveToLocalStorage();
+            } catch (error) {
+                console.error('Gemini API Error:', error);
+                typingEl.classList.add('hidden');
+                session.messages.push({
+                    role: 'assistant',
+                    text: '⚠️ **Connection Error:** Unable to reach Scrpix AI. Please verify network connection.',
+                    attachments: []
+                });
+                renderCurrentChatMessages();
+            }
+        }
+
+        async function callGeminiAPI(messages, retries = 3, delay = 1000) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=`;
+
+            const contents = messages.map(msg => {
+                const parts = [];
+                if (msg.text) parts.push({ text: msg.text });
+                if (msg.attachments && msg.attachments.length > 0) {
+                    msg.attachments.forEach(att => {
+                        if (att.base64Data) {
+                            parts.push({
+                                inlineData: {
+                                    mimeType: att.type || 'image/jpeg',
+                                    data: att.base64Data
+                                }
+                            });
+                        }
+                    });
+                }
+                return {
+                    role: msg.role === 'assistant' ? 'model' : 'user',
+                    parts: parts
+                };
+            });
+
+            const payload = {
+                contents: contents,
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                },
+                tools: [{ "google_search": {} }]
+            };
+
+            for (let attempt = 0; attempt < retries; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && attempt < retries - 1) {
+                            await new Promise(res => setTimeout(res, delay));
+                            delay *= 2;
+                            continue;
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        return candidate.content.parts[0].text;
+                    } else {
+                        throw new Error('Invalid response structure');
+                    }
+                } catch (err) {
+                    if (attempt === retries - 1) throw err;
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // Auth Modal Controls
+        function openAuthModal(mode = 'signin') {
+            authMode = mode;
+            const modal = document.getElementById('authModal');
+            modal.classList.remove('hidden');
+            switchAuthTab(mode);
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+
+        function switchAuthTab(mode) {
+            authMode = mode;
+            const tabSignIn = document.getElementById('tabSignIn');
+            const tabSignUp = document.getElementById('tabSignUp');
+            const nameField = document.getElementById('nameFieldContainer');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const switchText = document.getElementById('authSwitchText');
+
+            if (mode === 'signin') {
+                tabSignIn.className = "text-base font-bold pb-2 border-b-2 border-neutral-900 text-neutral-900 transition-all";
+                tabSignUp.className = "text-base font-semibold pb-2 border-b-2 border-transparent text-neutral-400 hover:text-neutral-700 transition-all";
+                nameField.classList.add('hidden');
+                submitBtn.innerText = "Sign In to Scrpix AI";
+                switchText.innerHTML = 'Don\'t have an account? <span onclick="switchAuthTab(\'signup\')" class="text-neutral-900 font-semibold cursor-pointer underline">Sign Up</span>';
+            } else {
+                tabSignUp.className = "text-base font-bold pb-2 border-b-2 border-neutral-900 text-neutral-900 transition-all";
+                tabSignIn.className = "text-base font-semibold pb-2 border-b-2 border-transparent text-neutral-400 hover:text-neutral-700 transition-all";
+                nameField.classList.remove('hidden');
+                submitBtn.innerText = "Create Account";
+                switchText.innerHTML = 'Already have an account? <span onclick="switchAuthTab(\'signin\')" class="text-neutral-900 font-semibold cursor-pointer underline">Sign In</span>';
+            }
+        }
+
+        function handleAuthSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const nameInput = document.getElementById('authName').value;
+            const name = authMode === 'signup' && nameInput ? nameInput : email.split('@')[0];
+
+            currentUser = { name, email };
+            
+            // Update UI with user info
+            document.getElementById('userNameDisplay').innerText = currentUser.name;
+            document.getElementById('userAvatarContainer').innerText = currentUser.name.substring(0, 2).toUpperCase();
+
+            closeAuthModal();
+            showToast(`Successfully ${authMode === 'signin' ? 'signed in' : 'registered'} as ${currentUser.name}!`, 'success');
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'bg-neutral-900 text-white px-4 py-3 rounded-2xl text-xs flex items-center space-x-2 shadow-2xl animate-fade-in border border-neutral-800 pointer-events-auto';
+            toast.innerHTML = `
+                <i data-lucide="${type === 'success' ? 'check-circle' : 'info'}" class="w-4 h-4 shrink-0 text-white"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Local Storage
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('scrpix_sessions_v3', JSON.stringify(chatSessions));
+            } catch (e) {
+                console.error('Storage error:', e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('scrpix_sessions_v3');
+                if (saved) {
+                    chatSessions = JSON.parse(saved);
+                    if (chatSessions.length > 0) {
+                        currentSessionId = chatSessions[0].id;
+                    }
+                }
+                renderChatHistoryList();
+                renderCurrentChatMessages();
+            } catch (e) {
+                console.error('Storage load error:', e);
+            }
+        }
+    </script>
 </body>
 </html>

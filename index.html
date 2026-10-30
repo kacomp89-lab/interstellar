@@ -1,814 +1,331 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interstellar | Daily Space Quiz</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        space: {
-                            900: '#070B19',
-                            800: '#0D132D',
-                            700: '#151D3D',
-                            600: '#1F2A59',
-                            accent: '#38BDF8',
-                            purple: '#A855F7',
-                            pink: '#EC4899',
-                            neon: '#00FFCC'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'float': 'float 6s ease-in-out infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        },
-                        glow: {
-                            '0%': { boxShadow: '0 0 15px rgba(56, 189, 248, 0.4)' },
-                            '100%': { boxShadow: '0 0 30px rgba(168, 85, 247, 0.8)' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome for cinematic icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
-    <!-- Canvas Confetti Library -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #070B19;
-            color: #F8FAFC;
-            overflow-x: hidden;
-        }
-        .orbitron {
-            font-family: 'Orbitron', sans-serif;
-        }
-        /* Glassmorphism card style */
-        .glass-panel {
-            background: rgba(13, 19, 45, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(56, 189, 248, 0.15);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-        .glass-button {
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .glass-button:hover {
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.4), rgba(168, 85, 247, 0.4));
-            border-color: rgba(56, 189, 248, 0.4);
-        }
-        /* Starfield background generator */
-        #starfield {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #070B19;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1F2A59;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #38BDF8;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>memory.os — AI Screenshot Memory & Search Engine</title>
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                     radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 40%),
+                     radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, #030712 100%);
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-border-hover: rgba(255, 255, 255, 0.3);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent-glow: #6366f1;
+      --accent-purple: #a855f7;
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: #030712;
+      background-image: var(--bg-gradient);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .liquid-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      animation: floatOrb 15s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    .orb-1 { width: 450px; height: 450px; background: rgba(99, 102, 241, 0.25); top: -100px; left: -100px; }
+    .orb-2 { width: 500px; height: 500px; background: rgba(168, 85, 247, 0.2); bottom: -150px; right: -100px; animation-delay: -5s; }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(40px, 60px) scale(1.1); }
+      100% { transform: translate(-30px, 40px) scale(0.95); }
+    }
+
+    .navbar {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 1200px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: var(--glass-shadow);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .nav-brand span {
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--glass-border-hover);
+    }
+
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
+
+    .btn-glass {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-glass:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--glass-border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary-glass {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(168, 85, 247, 0.6));
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary-glass:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.8));
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px -5px rgba(168, 85, 247, 0.5);
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 140px auto 80px;
+      padding: 0 20px;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      box-shadow: var(--glass-shadow);
+      transition: var(--transition);
+    }
+
+    .glass-card:hover {
+      border-color: var(--glass-border-hover);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-glow);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--glass-border);
+      margin-top: 80px;
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-space-accent selection:text-space-900">
+<body>
 
-    <canvas id="starfield"></canvas>
+  <div class="liquid-orb orb-1"></div>
+  <div class="liquid-orb orb-2"></div>
 
-    <!-- Ambient Sound Synthesizer (Web Audio API) & UI header -->
-    <header class="w-full max-w-6xl mx-auto p-4 md:p-6 flex flex-wrap justify-between items-center z-10">
-        <div class="flex items-center space-x-3 cursor-pointer" onclick="returnToHome()">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 animate-pulse-slow">
-                <i class="fa-solid fa-meteor text-white text-xl"></i>
-            </div>
-            <div>
-                <h1 class="orbitron text-lg md:text-xl font-black tracking-wider bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 bg-clip-text text-transparent">Interstellar Yt</h1>
-                <p class="text-xs text-slate-400 font-medium">Daily Space Quiz for Explorers</p>
-            </div>
-        </div>
-
-        <div class="flex items-center space-x-3 mt-3 sm:mt-0">
-            <!-- Audio Toggle -->
-            <button id="audioToggleBtn" onclick="toggleAudio()" class="px-3 py-2 rounded-xl glass-button text-cyan-400 text-sm font-semibold flex items-center space-x-2 transition duration-300">
-                <i id="audioIcon" class="fa-solid fa-volume-xmark"></i>
-                <span class="hidden sm:inline">Ambient Audio</span>
-            </button>
-
-            <!-- Admin / Question Manager Button -->
-            <button onclick="openAdminModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold shadow-lg shadow-purple-600/30 transition duration-300 flex items-center space-x-2">
-                <i class="fa-solid fa-sliders"></i>
-                <span>Creator Admin</span>
-            </button>
-        </div>
-    </header>
-
-    <main class="w-full max-w-3xl mx-auto px-4 py-6 flex-grow flex flex-col justify-center items-center z-10">
-
-        <!-- 1. START SCREEN -->
-        <div id="startScreen" class="w-full glass-panel rounded-3xl p-6 md:p-10 text-center relative overflow-hidden transition-all duration-500 animate-float">
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
-            <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 inline-block mb-6">
-                <i class="fa-solid fa-satellite mr-1"></i> Daily Broadcast Quiz #001
-            </span>
-
-            <h2 class="orbitron text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
-                Test Your <span class="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Cosmic IQ</span>
-            </h2>
-            <p class="text-slate-300 text-sm md:text-base max-w-xl mx-auto mb-8 font-light">
-                Welcome YouTube space cadets! Put your astrophysics knowledge to the test. Answer one question at a time, beat the timer, and claim your interstellar rank.
-            </p>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-left max-w-lg mx-auto">
-                <div class="glass-panel p-3 rounded-2xl flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold">
-                        <i class="fa-solid fa-list-ol"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs text-slate-400">Format</div>
-                        <div class="text-sm font-semibold text-white">One at a Time</div>
-                    </div>
-                </div>
-                <div class="glass-panel p-3 rounded-2xl flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold">
-                        <i class="fa-solid fa-stopwatch"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs text-slate-400">Timer</div>
-                        <div class="text-sm font-semibold text-white">15s / Question</div>
-                    </div>
-                </div>
-                <div class="glass-panel p-3 rounded-2xl flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400 font-bold">
-                        <i class="fa-solid fa-trophy"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs text-slate-400">Rewards</div>
-                        <div class="text-sm font-semibold text-white">YouTube Ranks</div>
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="startQuiz()" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold text-lg shadow-xl shadow-cyan-500/20 transform hover:-translate-y-0.5 transition duration-300 flex items-center justify-center space-x-3 mx-auto">
-                <span>INITIALIZE LAUNCH</span>
-                <i class="fa-solid fa-rocket"></i>
-            </button>
-        </div>
-
-        <!-- 2. QUIZ SCREEN -->
-        <div id="quizScreen" class="w-full glass-panel rounded-3xl p-6 md:p-8 hidden relative transition-all duration-500">
-            <!-- Quiz Header Info -->
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center space-x-2">
-                    <span id="currentQuestionNum" class="orbitron text-lg font-bold text-cyan-400">01</span>
-                    <span class="text-slate-500">/</span>
-                    <span id="totalQuestionsNum" class="text-slate-400 text-sm">10</span>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <!-- Score Counter badge -->
-                    <div class="px-3 py-1 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-semibold">
-                        <i class="fa-solid fa-star text-amber-400 mr-1"></i> Score: <span id="currentScoreLive">0</span>
-                    </div>
-                    <!-- Timer badge -->
-                    <div id="timerBadge" class="flex items-center space-x-2 px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
-                        <i class="fa-solid fa-clock"></i>
-                        <span id="timerCountdown">15</span>s
-                    </div>
-                </div>
-            </div>
-
-            <!-- Progress Bar -->
-            <div class="w-full h-2 bg-space-800 rounded-full mb-8 overflow-hidden">
-                <div id="quizProgressBar" class="h-full bg-gradient-to-r from-cyan-400 to-purple-500 transition-all duration-300 w-0"></div>
-            </div>
-
-            <!-- Question Card -->
-            <div class="mb-8">
-                <h3 id="questionText" class="orbitron text-xl md:text-2xl font-bold text-white mb-6 leading-snug">
-                    Loading question...
-                </h3>
-
-                <!-- Options Grid -->
-                <div id="optionsContainer" class="grid grid-cols-1 gap-3.5">
-                    <!-- Dynamically populated options -->
-                </div>
-            </div>
-
-            <!-- Explanation Box (Hidden initially, shown after answer) -->
-            <div id="explanationBox" class="hidden mb-6 p-4 rounded-2xl bg-space-800/80 border border-cyan-500/30 text-sm text-slate-300 animate-pulse-slow">
-                <div class="flex items-center space-x-2 text-cyan-400 font-bold mb-1">
-                    <i class="fa-solid fa-circle-info"></i>
-                    <span>Cosmic Fact</span>
-                </div>
-                <p id="explanationText"></p>
-            </div>
-
-            <!-- Next Button -->
-            <div class="flex justify-end">
-                <button id="nextQuestionBtn" onclick="nextQuestion()" class="hidden px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/20 transition duration-300 flex items-center space-x-2">
-                    <span id="nextBtnText">Next Question</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- 3. RESULTS SCREEN -->
-        <div id="resultsScreen" class="w-full glass-panel rounded-3xl p-6 md:p-10 text-center hidden relative overflow-hidden transition-all duration-500">
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 to-pink-500 mx-auto flex items-center justify-center text-3xl text-white shadow-xl shadow-amber-500/30 mb-6 animate-bounce">
-                <i class="fa-solid fa-award"></i>
-            </div>
-
-            <h2 class="orbitron text-2xl md:text-4xl font-extrabold text-white mb-2">
-                Mission Accomplished!
-            </h2>
-            <p class="text-slate-400 text-sm mb-6">Here is your final telemetry data from the cosmic expedition.</p>
-
-            <!-- Rank Card -->
-            <div class="glass-panel p-6 rounded-2xl max-w-md mx-auto mb-8 border border-purple-500/30 relative">
-                <div class="text-xs uppercase tracking-widest text-cyan-400 font-bold mb-1">Assigned Space Rank</div>
-                <div id="rankTitle" class="orbitron text-2xl md:text-3xl font-black text-white mb-3">Galaxy Commander</div>
-                <div class="flex justify-center items-center space-x-6 text-slate-300 text-sm pt-4 border-t border-slate-700/50">
-                    <div>
-                        <div class="text-xs text-slate-400">Total Score</div>
-                        <div id="finalScoreText" class="orbitron text-xl font-bold text-cyan-400">8 / 10</div>
-                    </div>
-                    <div class="w-px h-8 bg-slate-700"></div>
-                    <div>
-                        <div class="text-xs text-slate-400">Accuracy</div>
-                        <div id="finalAccuracyText" class="orbitron text-xl font-bold text-purple-400">80%</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Call to Actions -->
-            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-                <a href="https://youtube.com" target="_blank" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm shadow-lg shadow-red-600/30 transition duration-300 flex items-center justify-center space-x-2">
-                    <i class="fa-brands fa-youtube text-lg"></i>
-                    <span>Subscribe for Next Daily Quiz</span>
-                </a>
-                <button onclick="shareScore()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl glass-button text-cyan-400 font-bold text-sm transition duration-300 flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-share-nodes"></i>
-                    <span>Share Score</span>
-                </button>
-                <button onclick="restartQuiz()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl glass-button text-slate-300 font-bold text-sm transition duration-300 flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-rotate-right"></i>
-                    <span>Try Again</span>
-                </button>
-            </div>
-        </div>
-
-    </main>
-
-    <div id="adminModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
-        <div class="glass-panel w-full max-w-2xl rounded-3xl p-6 md:p-8 max-h-[90vh] flex flex-col border border-purple-500/30">
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center font-bold">
-                        <i class="fa-solid fa-sliders"></i>
-                    </div>
-                    <div>
-                        <h3 class="orbitron text-lg font-bold text-white">Creator Admin Panel</h3>
-                        <p class="text-xs text-slate-400">Update daily quiz questions instantly</p>
-                    </div>
-                </div>
-                <button onclick="closeAdminModal()" class="w-9 h-9 rounded-xl glass-button text-slate-400 hover:text-white flex items-center justify-center transition">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <!-- Tab Navigation for Admin -->
-            <div class="flex space-x-2 mb-4 border-b border-slate-700/60 pb-3">
-                <button onclick="switchAdminTab('editor')" id="tabEditorBtn" class="px-4 py-2 rounded-xl bg-purple-600/30 text-purple-300 text-xs font-bold transition">Add / Edit Question</button>
-                <button onclick="switchAdminTab('list')" id="tabListBtn" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-bold transition">Current Questions (<span id="adminQuestionCount">0</span>)</button>
-            </div>
-
-            <!-- Tab 1: Add/Edit Form -->
-            <div id="adminEditorTab" class="overflow-y-auto flex-grow space-y-4 pr-1">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Question Statement</label>
-                    <input type="text" id="adminQText" placeholder="e.g. Which planet has the most moons?" class="w-full px-4 py-2.5 rounded-xl bg-space-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400">
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Option A</label>
-                        <input type="text" id="adminOpt0" placeholder="Mars" class="w-full px-4 py-2 rounded-xl bg-space-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Option B</label>
-                        <input type="text" id="adminOpt1" placeholder="Saturn" class="w-full px-4 py-2 rounded-xl bg-space-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Option C</label>
-                        <input type="text" id="adminOpt2" placeholder="Jupiter" class="w-full px-4 py-2 rounded-xl bg-space-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Option D</label>
-                        <input type="text" id="adminOpt3" placeholder="Neptune" class="w-full px-4 py-2 rounded-xl bg-space-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Correct Option (0 to 3)</label>
-                        <select id="adminCorrectIdx" class="w-full px-4 py-2.5 rounded-xl bg-space-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400">
-                            <option value="0">Option A</option>
-                            <option value="1">Option B</option>
-                            <option value="2">Option C</option>
-                            <option value="3">Option D</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Cosmic Explanation Fact</label>
-                        <input type="text" id="adminExplanation" placeholder="Saturn surpassed Jupiter with 146 moons..." class="w-full px-4 py-2.5 rounded-xl bg-space-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400">
-                    </div>
-                </div>
-
-                <div class="pt-3 flex space-x-3">
-                    <button onclick="addNewQuestion()" class="flex-grow py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/20 transition">
-                        <i class="fa-solid fa-plus mr-1"></i> Add Question to Quiz
-                    </button>
-                    <button onclick="resetToDefaultQuestions()" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm font-semibold transition border border-red-500/30" title="Reset to default questions">
-                        <i class="fa-solid fa-rotate"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tab 2: Question List -->
-            <div id="adminListTab" class="overflow-y-auto flex-grow space-y-3 pr-1 hidden">
-                <div id="adminQuestionsListContainer" class="space-y-2">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-
-            <div class="mt-6 pt-4 border-t border-slate-700/60 flex justify-between items-center text-xs text-slate-400">
-                <span>Changes save automatically to browser storage for daily updates.</span>
-                <button onclick="closeAdminModal()" class="px-5 py-2 rounded-xl bg-space-700 hover:bg-space-600 text-white font-semibold transition">Close</button>
-            </div>
-        </div>
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" stroke-width="2.5"><defs><linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#c084fc"/></linearGradient></defs><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <span>memory.os</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="settings.html">Settings</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="login.html" class="btn-glass">Sign In</a>
+      <a href="register.html" class="btn-primary-glass">Get Started</a>
     </div>
+  </nav>
 
-    <footer class="w-full max-w-6xl mx-auto p-4 md:p-6 text-center text-xs text-slate-500 z-10">
-        <p>Cosmic Odyssey &copy; 2026 &bull; Designed for YouTube Space Creators & Explorers</p>
-    </footer>
+  <main class="main-container">
+    <section style="text-align: center; margin-bottom: 60px;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 50px; margin-bottom: 24px; font-size: 0.85rem; font-weight: 500; color: #a5b4fc;">
+        ✨ Apple Liquid Glass Experience v2.6 Active
+      </div>
+      <h1 style="font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 20px;">
+        Your Visual Memory, <br><span style="background: linear-gradient(135deg, #818cf8, #e879f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Supercharged by AI.</span>
+      </h1>
+      <p style="color: var(--text-secondary); font-size: clamp(1rem, 2vw, 1.25rem); max-width: 700px; margin: 0 auto 40px; line-height: 1.6;">
+        memory.os captures everything on your screen intelligently. Ask anything about your past screenshots, documents, or chats, and get instant evidence-backed answers.
+      </p>
 
-    <script>
-        // Default default questions (easily modifiable or updated in Admin panel)
-        const DEFAULT_QUESTIONS = [
-            {
-                question: "Which planet in our solar system has the most confirmed moons as of recent discoveries?",
-                options: ["Jupiter", "Saturn", "Uranus", "Neptune"],
-                correct: 1,
-                explanation: "Saturn holds the record with over 140 confirmed moons, closely followed by Jupiter!"
-            },
-            {
-                question: "What is the name of the supermassive black hole located at the center of our Milky Way galaxy?",
-                options: ["Cygnus X-1", "Sagittarius A*", "M87*", "Andromeda Core"],
-                correct: 1,
-                explanation: "Sagittarius A* (pronounced 'A-star') has a mass of about 4.3 million times our Sun."
-            },
-            {
-                question: "Which spacecraft holds the record for being the farthest human-made object from Earth?",
-                options: ["Hubble Space Telescope", "New Horizons", "Voyager 1", "James Webb Space Telescope"],
-                correct: 2,
-                explanation: "Voyager 1 entered interstellar space in 2012 and continues to transmit telemetry data."
-            },
-            {
-                question: "What phenomenon causes a massive star to collapse and explode at the end of its life cycle?",
-                options: ["Solar Flare", "Supernova", "Quasar Eruption", "Nebula Condensation"],
-                correct: 1,
-                explanation: "A supernova explosion is one of the most energetic events in the universe, scattering heavy elements."
-            },
-            {
-                question: "Approximately how long does light take to travel from the Sun to Earth?",
-                options: ["1 second", "8 minutes and 20 seconds", "1 hour", "24 hours"],
-                correct: 1,
-                explanation: "Sunlight travels roughly 150 million kilometers in about 500 seconds (8 minutes 20 seconds)."
-            }
-        ];
+      <div class="glass-card" style="max-width: 800px; margin: 0 auto; padding: 24px;">
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <input type="text" id="aiSearchInput" class="form-input" placeholder="Ask anything... e.g. 'What was that flight price I saw yesterday?'" style="margin-bottom: 0;">
+          <button id="aiSearchBtn" class="btn-primary-glass" style="white-space: nowrap; padding: 14px 24px;">
+            AI Search
+          </button>
+        </div>
+        
+        <div id="aiResultBox" style="margin-top: 20px; text-align: left; display: none; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 20px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #a5b4fc; font-weight: 600; font-size: 0.9rem;">
+            <span>🤖 memory.os AI Synthesizer</span>
+            <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-secondary);">Found in 3 screenshots • 99.4% Match</span>
+          </div>
+          <p id="aiAnswerText" style="font-size: 1rem; line-height: 1.6; margin-bottom: 16px; color: var(--text-primary);"></p>
+          <div style="border-top: 1px solid var(--glass-border); padding-top: 12px; display: flex; gap: 12px; align-items: center;">
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">Evidence Source:</span>
+            <div style="background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--glass-border);">📸 Flight_Booking_Confirm.png (Yesterday, 4:15 PM)</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        // Load questions from localStorage or defaults
-        let quizQuestions = JSON.parse(localStorage.getItem('cosmic_quiz_questions')) || DEFAULT_QUESTIONS;
+    <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 60px;">
+      <div class="glass-card">
+        <div style="font-size: 2rem; margin-bottom: 16px;">🧠</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;">Universal OCR & Context</h3>
+        <p style="color: var(--text-secondary); line-height: 1.5;">Continuously indexes text, code, images, and videos from your workflow securely.</p>
+      </div>
+      <div class="glass-card">
+        <div style="font-size: 2rem; margin-bottom: 16px;">🔍</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;">Evidence-Based Answers</h3>
+        <p style="color: var(--text-secondary); line-height: 1.5;">Never guess. Every answer links directly to the exact timestamp and screenshot region.</p>
+      </div>
+      <div class="glass-card">
+        <div style="font-size: 2rem; margin-bottom: 16px;">🔒</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;">Military-Grade Privacy</h3>
+        <p style="color: var(--text-secondary); line-height: 1.5;">Zero-knowledge encryption ensures your visual history remains strictly private.</p>
+      </div>
+    </section>
+  </main>
 
-        // Quiz State Variables
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let timerInterval = null;
-        let timeLeft = 15;
-        let isAnswerLocked = false;
-        let audioCtx = null;
-        let isAudioEnabled = false;
+  <footer class="footer">
+    <p>&copy; 2026 memory.os Inc. Designed with Apple Liquid Glass Aesthetics.</p>
+  </footer>
 
-        // Starfield background generation
-        const canvas = document.getElementById('starfield');
-        const ctx = canvas.getContext('2d');
-        let stars = [];
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const aiSearchBtn = document.getElementById('aiSearchBtn');
+      const aiSearchInput = document.getElementById('aiSearchInput');
+      const aiResultBox = document.getElementById('aiResultBox');
+      const aiAnswerText = document.getElementById('aiAnswerText');
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initStars();
-        }
+      if (aiSearchBtn && aiSearchInput && aiResultBox) {
+        const handleAISearch = () => {
+          const query = aiSearchInput.value.trim();
+          if (!query) {
+            aiSearchInput.style.borderColor = '#ef4444';
+            setTimeout(() => aiSearchInput.style.borderColor = 'var(--glass-border)', 1500);
+            return;
+          }
 
-        function initStars() {
-            stars = [];
-            const count = Math.floor((canvas.width * canvas.height) / 3000);
-            for (let i = 0; i < count; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 1.5 + 0.5,
-                    alpha: Math.random(),
-                    speed: Math.random() * 0.02 + 0.005
-                });
-            }
-        }
+          aiSearchBtn.textContent = 'Searching Vault...';
+          aiResultBox.style.display = 'none';
 
-        function animateStars() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#FFFFFF';
-            stars.forEach(star => {
-                ctx.globalAlpha = star.alpha;
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-                ctx.fill();
-                star.alpha += star.speed;
-                if (star.alpha > 1 || star.alpha < 0.1) {
-                    star.speed = -star.speed;
-                }
-            });
-            requestAnimationFrame(animateStars);
-        }
+          setTimeout(() => {
+            aiSearchBtn.textContent = 'AI Search';
+            aiResultBox.style.display = 'block';
+            aiAnswerText.innerHTML = `Based on your screenshot history for query <em>"${query}"</em>, you viewed a flight booking confirmation on <strong>Emirates Flight #EK202</strong> priced at <strong>$849.00</strong> departing from JFK to DXB on November 14, 2026.`;
+            aiResultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 800);
+        };
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-        animateStars();
-
-        // Simple Audio Synthesizer using Web Audio API (No external sound files required)
-        function playTone(freq, type, duration) {
-            if (!isAudioEnabled) return;
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (e) {
-                console.log("Audio context suppressed or not supported");
-            }
-        }
-
-        function toggleAudio() {
-            isAudioEnabled = !isAudioEnabled;
-            const icon = document.getElementById('audioIcon');
-            const btn = document.getElementById('audioToggleBtn');
-            if (isAudioEnabled) {
-                icon.className = "fa-solid fa-volume-high text-cyan-400";
-                btn.classList.add("border-cyan-400");
-                playTone(440, 'sine', 0.2);
-            } else {
-                icon.className = "fa-solid fa-volume-xmark";
-                btn.classList.remove("border-cyan-400");
-            }
-        }
-
-        // Navigation controls
-        function returnToHome() {
-            clearInterval(timerInterval);
-            document.getElementById('startScreen').classList.remove('hidden');
-            document.getElementById('quizScreen').classList.add('hidden');
-            document.getElementById('resultsScreen').classList.add('hidden');
-        }
-
-        function startQuiz() {
-            if (quizQuestions.length === 0) {
-                alert("No questions available! Please add questions in the Creator Admin panel.");
-                openAdminModal();
-                return;
-            }
-            currentQuestionIndex = 0;
-            score = 0;
-            document.getElementById('startScreen').classList.add('hidden');
-            document.getElementById('resultsScreen').classList.add('hidden');
-            document.getElementById('quizScreen').classList.remove('hidden');
-            document.getElementById('totalQuestionsNum').textContent = quizQuestions.length;
-            loadQuestion();
-        }
-
-        function loadQuestion() {
-            isAnswerLocked = false;
-            clearInterval(timerInterval);
-            timeLeft = 15;
-            document.getElementById('timerCountdown').textContent = timeLeft;
-            document.getElementById('timerBadge').className = "flex items-center space-x-2 px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold";
-
-            const q = quizQuestions[currentQuestionIndex];
-            document.getElementById('currentQuestionNum').textContent = String(currentQuestionIndex + 1).padStart(2, '0');
-            document.getElementById('questionText').textContent = q.question;
-            document.getElementById('currentScoreLive').textContent = score;
-
-            // Progress bar update
-            const progressPct = ((currentQuestionIndex) / quizQuestions.length) * 100;
-            document.getElementById('quizProgressBar').style.width = `${progressPct}%`;
-
-            // Hide explanation & next button
-            document.getElementById('explanationBox').classList.add('hidden');
-            document.getElementById('nextQuestionBtn').classList.add('hidden');
-
-            // Render options
-            const optionsContainer = document.getElementById('optionsContainer');
-            optionsContainer.innerHTML = '';
-
-            q.options.forEach((opt, idx) => {
-                const btn = document.createElement('button');
-                btn.className = "w-full text-left p-4 rounded-2xl glass-panel hover:border-cyan-400 text-slate-200 font-medium text-sm md:text-base transition duration-300 flex items-center justify-between group";
-                btn.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <span class="w-7 h-7 rounded-xl bg-space-800 text-cyan-400 font-bold text-xs flex items-center justify-center border border-slate-700 group-hover:border-cyan-400">${String.fromCharCode(65 + idx)}</span>
-                        <span>${opt}</span>
-                    </div>
-                    <i class="fa-regular fa-circle text-slate-600 group-hover:text-cyan-400"></i>
-                `;
-                btn.onclick = () => selectOption(idx, btn);
-                optionsContainer.appendChild(btn);
-            });
-
-            startTimer();
-        }
-
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timerCountdown').textContent = timeLeft;
-                if (timeLeft <= 5) {
-                    document.getElementById('timerBadge').className = "flex items-center space-x-2 px-3 py-1 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold animate-pulse";
-                    playTone(300, 'sawtooth', 0.1);
-                }
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    handleTimeOut();
-                }
-            }, 1000);
-        }
-
-        function handleTimeOut() {
-            if (isAnswerLocked) return;
-            isAnswerLocked = true;
-            playTone(150, 'sawtooth', 0.4);
-
-            const q = quizQuestions[currentQuestionIndex];
-            const buttons = document.getElementById('optionsContainer').children;
-            
-            // Highlight correct option
-            buttons[q.correct].className = "w-full text-left p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500 text-white font-medium text-sm md:text-base flex items-center justify-between shadow-lg shadow-emerald-500/20";
-            
-            showExplanationAndNext();
-        }
-
-        function selectOption(selectedIdx, btnElement) {
-            if (isAnswerLocked) return;
-            isAnswerLocked = true;
-            clearInterval(timerInterval);
-
-            const q = quizQuestions[currentQuestionIndex];
-            const buttons = document.getElementById('optionsContainer').children;
-
-            if (selectedIdx === q.correct) {
-                score++;
-                document.getElementById('currentScoreLive').textContent = score;
-                btnElement.className = "w-full text-left p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500 text-white font-medium text-sm md:text-base flex items-center justify-between shadow-lg shadow-emerald-500/20";
-                btnElement.querySelector('i').className = "fa-solid fa-circle-check text-emerald-400 text-lg";
-                playTone(600, 'sine', 0.3);
-            } else {
-                btnElement.className = "w-full text-left p-4 rounded-2xl bg-red-500/20 border border-red-500 text-white font-medium text-sm md:text-base flex items-center justify-between shadow-lg shadow-red-500/20";
-                btnElement.querySelector('i').className = "fa-solid fa-circle-xmark text-red-400 text-lg";
-                playTone(200, 'sawtooth', 0.4);
-
-                // Highlight correct one
-                buttons[q.correct].className = "w-full text-left p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500 text-white font-medium text-sm md:text-base flex items-center justify-between shadow-lg shadow-emerald-500/20";
-            }
-
-            showExplanationAndNext();
-        }
-
-        function showExplanationAndNext() {
-            const q = quizQuestions[currentQuestionIndex];
-            document.getElementById('explanationText').textContent = q.explanation;
-            document.getElementById('explanationBox').classList.remove('hidden');
-
-            const nextBtn = document.getElementById('nextQuestionBtn');
-            nextBtn.classList.remove('hidden');
-
-            if (currentQuestionIndex === quizQuestions.length - 1) {
-                document.getElementById('nextBtnText').textContent = "View Mission Results";
-            } else {
-                document.getElementById('nextBtnText').textContent = "Next Question";
-            }
-        }
-
-        function nextQuestion() {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < quizQuestions.length) {
-                loadQuestion();
-            } else {
-                showResults();
-            }
-        }
-
-        function showResults() {
-            document.getElementById('quizScreen').classList.add('hidden');
-            document.getElementById('resultsScreen').classList.remove('hidden');
-
-            const percentage = Math.round((score / quizQuestions.length) * 100);
-            document.getElementById('finalScoreText').textContent = `${score} / ${quizQuestions.length}`;
-            document.getElementById('finalAccuracyText').textContent = `${percentage}%`;
-
-            // Assign rank title
-            let rank = "Space Cadet";
-            if (percentage === 100) rank = "Supernova Master 🌟";
-            else if (percentage >= 80) rank = "Galaxy Commander 🚀";
-            else if (percentage >= 60) rank = "Orbital Navigator 🛰️";
-            else if (percentage >= 40) rank = "Stargazer 🔭";
-
-            document.getElementById('rankTitle').textContent = rank;
-
-            // Trigger Confetti Celebration
-            try {
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-            } catch (e) {}
-
-            playTone(800, 'sine', 0.5);
-        }
-
-        function restartQuiz() {
-            startQuiz();
-        }
-
-        function shareScore() {
-            const text = `I just scored ${score}/${quizQuestions.length} on the Cosmic Odyssey Space Quiz and earned the rank of "${document.getElementById('rankTitle').textContent}"! Test your space IQ here:`;
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text + " " + window.location.href);
-                alert("Score copied to clipboard! Share it with your friends on social media.");
-            } else {
-                alert(text);
-            }
-        }
-
-        // --- ADMIN PANEL FUNCTIONS ---
-        function openAdminModal() {
-            document.getElementById('adminModal').classList.remove('hidden');
-            renderAdminQuestionsList();
-        }
-
-        function closeAdminModal() {
-            document.getElementById('adminModal').classList.add('hidden');
-        }
-
-        function switchAdminTab(tab) {
-            const editorTab = document.getElementById('adminEditorTab');
-            const listTab = document.getElementById('adminListTab');
-            const editorBtn = document.getElementById('tabEditorBtn');
-            const listBtn = document.getElementById('tabListBtn');
-
-            if (tab === 'editor') {
-                editorTab.classList.remove('hidden');
-                listTab.classList.add('hidden');
-                editorBtn.className = "px-4 py-2 rounded-xl bg-purple-600/30 text-purple-300 text-xs font-bold transition";
-                listBtn.className = "px-4 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-bold transition";
-            } else {
-                editorTab.classList.add('hidden');
-                listTab.classList.remove('hidden');
-                editorBtn.className = "px-4 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-bold transition";
-                listBtn.className = "px-4 py-2 rounded-xl bg-purple-600/30 text-purple-300 text-xs font-bold transition";
-                renderAdminQuestionsList();
-            }
-        }
-
-        function addNewQuestion() {
-            const qText = document.getElementById('adminQText').value.trim();
-            const opt0 = document.getElementById('adminOpt0').value.trim();
-            const opt1 = document.getElementById('adminOpt1').value.trim();
-            const opt2 = document.getElementById('adminOpt2').value.trim();
-            const opt3 = document.getElementById('adminOpt3').value.trim();
-            const correct = parseInt(document.getElementById('adminCorrectIdx').value);
-            const explanation = document.getElementById('adminExplanation').value.trim();
-
-            if (!qText || !opt0 || !opt1 || !opt2 || !opt3 || !explanation) {
-                alert("Please fill in all question fields and explanation.");
-                return;
-            }
-
-            const newQ = {
-                question: qText,
-                options: [opt0, opt1, opt2, opt3],
-                correct: correct,
-                explanation: explanation
-            };
-
-            quizQuestions.push(newQ);
-            localStorage.setItem('cosmic_quiz_questions', JSON.stringify(quizQuestions));
-
-            // Clear inputs
-            document.getElementById('adminQText').value = '';
-            document.getElementById('adminOpt0').value = '';
-            document.getElementById('adminOpt1').value = '';
-            document.getElementById('adminOpt2').value = '';
-            document.getElementById('adminOpt3').value = '';
-            document.getElementById('adminExplanation').value = '';
-
-            alert("Successfully added new question to the daily quiz!");
-            switchAdminTab('list');
-        }
-
-        function deleteQuestion(index) {
-            if (quizQuestions.length <= 1) {
-                alert("You must keep at least 1 question in the quiz.");
-                return;
-            }
-            if (confirm("Are you sure you want to delete this question?")) {
-                quizQuestions.splice(index, 1);
-                localStorage.setItem('cosmic_quiz_questions', JSON.stringify(quizQuestions));
-                renderAdminQuestionsList();
-            }
-        }
-
-        function resetToDefaultQuestions() {
-            if (confirm("Reset quiz questions back to the default YouTube daily set?")) {
-                quizQuestions = [...DEFAULT_QUESTIONS];
-                localStorage.setItem('cosmic_quiz_questions', JSON.stringify(quizQuestions));
-                renderAdminQuestionsList();
-                alert("Quiz reset to default successfully!");
-            }
-        }
-
-        function renderAdminQuestionsList() {
-            document.getElementById('adminQuestionCount').textContent = quizQuestions.length;
-            const container = document.getElementById('adminQuestionsListContainer');
-            container.innerHTML = '';
-
-            quizQuestions.forEach((q, idx) => {
-                const div = document.createElement('div');
-                div.className = "p-3 rounded-xl bg-space-800/90 border border-slate-700/60 flex items-center justify-between text-sm";
-                div.innerHTML = `
-                    <div class="pr-3">
-                        <div class="text-xs text-cyan-400 font-bold mb-0.5">Q${idx + 1} &bull; Correct: Option ${String.fromCharCode(65 + q.correct)}</div>
-                        <div class="text-white font-medium line-clamp-1">${q.question}</div>
-                    </div>
-                    <button onclick="deleteQuestion(${idx})" class="w-8 h-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 flex items-center justify-center transition flex-shrink-0" title="Delete question">
-                        <i class="fa-solid fa-trash text-xs"></i>
-                    </button>
-                `;
-                container.appendChild(div);
-            });
-        }
-    </script>
+        aiSearchBtn.addEventListener('click', handleAISearch);
+        aiSearchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') handleAISearch();
+        });
+      }
+    });
+  </script>
 </body>
 </html>
